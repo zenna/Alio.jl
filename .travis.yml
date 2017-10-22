@@ -1,0 +1,31 @@
+language: julia
+os:
+  - linux
+  - osx
+julia:
+  - 0.6
+  - nightly
+notifications:
+  email: false
+env:
+  - DOCUMENTER_DEBUG="true" PYTHON=conda
+dist: trusty
+sudo: true
+script:
+  - julia -e 'Pkg.clone("NLopt")'
+  - julia -e 'Pkg.build("NLopt")'
+  - julia -e 'Pkg.clone(pwd())'
+  - julia -e 'Pkg.build("Alio")'
+  - julia -e 'Pkg.add("Plots")'
+  - julia -e 'Pkg.add("Luxor")'
+  - julia -e 'Pkg.add("MacroTools")'
+  # Make this conditiona on 0.7
+  - julia -e 'Pkg.checkout("LightGraphs")'
+  - julia -e 'Pkg.test("Alio", coverage=true)'
+after_success:
+  - julia -e 'cd(Pkg.dir("Alio")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
+  - julia -e 'Pkg.add("Documenter")'
+  - julia -e 'cd(Pkg.dir("Alio")); include(joinpath("docs", "make.jl"))'
+matrix:
+  allow_failures:
+    - julia: nightly
